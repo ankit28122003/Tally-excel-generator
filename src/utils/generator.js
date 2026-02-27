@@ -1,12 +1,10 @@
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 
-export const generateInvoiceData = (config, parties, hsnCodes) => {
-  const { startInvoice, startDate, endDate, isWithinState } = config;
+export const generateInvoiceData = (config, parties, hsnList) => {
+  const { startInvoice, startDate, endDate } = config;
   const start = new Date(startDate);
   const end = new Date(endDate);
   const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-  const DAILY_LIMIT = isWithinState ? 95000 : 45000;
 
   let currentInvoiceStr = startInvoice;
   const finalData = [];
@@ -21,38 +19,37 @@ export const generateInvoiceData = (config, parties, hsnCodes) => {
     const dateStr = currentDate.toLocaleDateString('en-GB').replace(/\//g, '-');
 
     parties.forEach(party => {
-      // Calculate remaining budget for this party
-      const spentSoFar = finalData
-        .filter(x => x["PARTY NAME"] === party.name)
-        .reduce((sum, x) => sum + parseFloat(x["TAXABLE"]), 0);
-      
-      const remainingTotal = party.amount - spentSoFar;
-      if (remainingTotal <= 0) return;
+      const dailyLimit = party.isWithinState ? 95000 : 45000;
+      const dailyPartyBudget = parseFloat(party.budget) / daysDiff;
 
-      // Determine target for today (not exceeding the daily limit)
-      const dailyTarget = Math.min(remainingTotal / (daysDiff - d), DAILY_LIMIT);
+      if (dailyPartyBudget > dailyLimit) {
+        throw new Error(`${party.name} daily total (${dailyPartyBudget.toFixed(0)}) exceeds ${dailyLimit} limit.`);
+      }
 
-      // Pick a random HSN
-      const product = hsnCodes[Math.floor(Math.random() * hsnCodes.length)];
-      if (!product || !product.price) return;
+      // Distribute budget across all HSN items
+      const targetTaxablePerHSN = dailyPartyBudget / hsnList.length;
 
-      const qty = Math.floor(dailyTarget / product.price);
-      
-      if (qty > 0) {
+      hsnList.forEach((hsn) => {
+        const unitPrice = parseFloat(hsn.price);
+        // Ensure Qty is never decimal
+        const qty = Math.floor(targetTaxablePerHSN / unitPrice);
+        // Taxable must be Qty * Unit Price to be valid
+        const actualTaxable = qty * unitPrice;
+        
         finalData.push({
           "DATE": dateStr,
-          "GSTIN": party.gstin || "",
-          "PARTY NAME": party.name,
-
           "INVOICE NO.": currentInvoiceStr,
-          "HSN CODE": product.code,
-          "QTY": qty,
-          "RATE": product.price,
-          "TAXABLE": (qty * product.price).toFixed(2),
-        //   "REMARKS": isWithinState ? "Intra-State" : "Inter-State"
+          "GSTIN": party.gstin,
+          "TRADE NAME": party.name,
+          "RATE": parseFloat(hsn.rate), 
+          "TAXABLE": parseFloat(actualTaxable.toFixed(2)), 
+          "HSN CODE(OPTIONAL)": hsn.id,
+          "QTY(OPTIONAL)": parseInt(qty),
+          "Platform Name(Optional)": "",
+          "GSTIN of e-commerce operator (Optional)": ""
         });
-        currentInvoiceStr = incrementInvoice(currentInvoiceStr);
-      }
+      });
+      currentInvoiceStr = incrementInvoice(currentInvoiceStr);
     });
   }
   return finalData;
@@ -60,7 +57,18 @@ export const generateInvoiceData = (config, parties, hsnCodes) => {
 
 export const exportToExcel = (data) => {
   const worksheet = XLSX.utils.json_to_sheet(data);
+  const range = XLSX.utils.decode_range(worksheet['!ref']);
+  for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+    [4, 5, 7].forEach(c => {
+      const cell = worksheet[XLSX.utils.encode_cell({r:R, c})];
+      if(cell) { 
+        cell.t = 'n'; 
+        // Rate and Taxable get decimals, Qty (column 7) gets whole number format
+        cell.z = (c === 7) ? '0' : '0.00'; 
+      }
+    });
+  }
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "B2B_Data");
-  XLSX.writeFile(workbook, `Invoices_Export.xlsx`);
+  XLSX.utils.book_append_sheet(workbook, worksheet, "B2B");
+  XLSX.writeFile(workbook, `Invoices_Final.xlsx`);
 };

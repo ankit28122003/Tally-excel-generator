@@ -1,134 +1,270 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-body {
-  font-family: 'Inter', sans-serif;
-  /* color: #4184ee; */
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  margin: 10px;
+:root {
+  --primary: #4f46e5;
+  --bg: #f8fafc;
+  --text: #0f172a;
+  --card-bg: #ffffff;
 }
 
-.panel {
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.center-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.main-container {
+  width: 100%;
+  max-width: 850px;
+}
+
+.auth-card {
   background: white;
-  padding: 1.5rem;
-  border-radius: 1.25rem;
-  box-shadow: 0 4px 6px -1px rgba(252, 230, 230, 0.05);
-  border: 1px solid #f1f5f9;
-  margin: 10px;
+  padding: 40px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  margin-top: 10vh;
+}
+
+.auth-icon {
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 12px;
+  margin: 20px 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.auth-card button {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hero-section {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  letter-spacing: -2px;
+  margin: 0;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.hero-section p {
+  color: #64748b;
+  font-size: 1.1rem;
+  margin-top: 8px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.glass-card {
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 1rem;
-  font-weight: 700;
+  gap: 10px;
   color: #475569;
-  margin-bottom: 1.25rem;
-  margin: 10px;
 }
 
-label {
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.grid-4 {
+  display: flex;
+  justify-content: space-evenly;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.input-group label {
   display: block;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   color: #94a3b8;
-  margin-bottom: 0.4rem;
-  letter-spacing: 0.025em;
+  margin-bottom: 6px;
 }
 
-input {
+input,
+select {
   width: 100%;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.6rem;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 0.95rem;
   box-sizing: border-box;
 }
 
 input:focus {
+  border-color: var(--primary);
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
-.toggle-group {
+.list-stack {
   display: flex;
-  background: #f1f5f9;
-  padding: 4px;
-  border-radius: 0.75rem;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
 }
 
-.toggle-group button {
-  flex: 1;
-  padding: 0.5rem;
+.list-item {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
+}
+
+.grid-item-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  align-items: center;
+  justify-content: space-evenly;
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-gap {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  flex-direction: column;
+}
+
+.add-pill {
+  background: #e0e7ff;
+  color: var(--primary);
   border: none;
-  border-radius: 0.5rem;
+  padding: 8px 16px;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 0.8rem;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #64748b;
-  background: transparent;
+  margin-left: 15px;
   transition: 0.2s;
 }
 
-.toggle-group button.active {
-  background: white;
-  color: #4f46e5;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.card-item {
-  background: #f8fafc;
-  padding: 1rem;
-  border-radius: 1rem;
-  border: 1px solid #eef2f6;
-  margin: 5px;
-}
-
-.add-small {
-  background: #6366f1;
+.add-pill:hover {
+  background: var(--primary);
   color: white;
-  border: none;
-  padding: 5px;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
 .del-btn {
   background: #fee2e2;
   color: #ef4444;
   border: none;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 12px;
   cursor: pointer;
-  margin: 10px;
+  width: 100%;
 }
 
-.download-btn {
-  background: #4f46e5;
+.primary-download {
+  background: var(--text);
   color: white;
   border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 20px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 1.1rem;
   cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  transition: 0.3s;
+}
+
+.primary-download:hover {
+  background: var(--primary);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+}
+
+.error-alert {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 16px;
+  border-radius: 16px;
+  border-left: 6px solid #ef4444;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: 0.2s;
 }
 
-.download-btn:hover { background: #4338ca; transform: translateY(-1px); }
+@media (max-width: 600px) {
+  .hero-section h1 {
+    font-size: 1.8rem;
+  }
 
-.limit-info {
-  font-size: 0.7rem;
-  color: #ef4444;
-  margin-top: 8px;
-  font-weight: 600;
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-item-footer {
+    flex-direction: column;
+  }
 }
