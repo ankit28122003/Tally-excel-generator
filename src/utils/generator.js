@@ -26,29 +26,52 @@ export const generateInvoiceData = (config, parties, hsnList) => {
         throw new Error(`${party.name} daily total (${dailyPartyBudget.toFixed(0)}) exceeds ${dailyLimit} limit.`);
       }
 
-      // Distribute budget across all HSN items
-      const targetTaxablePerHSN = dailyPartyBudget / hsnList.length;
+      // --- RANDOMIZATION LOGIC START ---
+      // 1. Generate random weights for each HSN
+      const weights = hsnList.map(() => Math.random() + 0.5); // +0.5 ensures no HSN gets 0 amount
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      
+      let remainingDailyBudget = dailyPartyBudget;
 
-      hsnList.forEach((hsn) => {
+      hsnList.forEach((hsn, index) => {
         const unitPrice = parseFloat(hsn.price);
-        // Ensure Qty is never decimal
-        const qty = Math.floor(targetTaxablePerHSN / unitPrice);
-        // Taxable must be Qty * Unit Price to be valid
+        
+        let targetAmountForThisHSN;
+        
+        // If it's the last HSN item, give it the remaining budget to ensure total matches exactly
+        if (index === hsnList.length - 1) {
+          targetAmountForThisHSN = remainingDailyBudget;
+        } else {
+          targetAmountForThisHSN = (weights[index] / totalWeight) * dailyPartyBudget;
+        }
+
+        // 2. Calculate Quantity (Whole Number)
+        const qty = Math.floor(targetAmountForThisHSN / unitPrice);
+        
+        // 3. Calculate Actual Taxable based on the whole Quantity
         const actualTaxable = qty * unitPrice;
         
-        finalData.push({
-          "DATE": dateStr,
-          "INVOICE NO.": currentInvoiceStr,
-          "GSTIN": party.gstin,
-          "TRADE NAME": party.name,
-          "RATE": parseFloat(hsn.rate), 
-          "TAXABLE": parseFloat(actualTaxable.toFixed(2)), 
-          "HSN CODE(OPTIONAL)": hsn.id,
-          "QTY(OPTIONAL)": parseInt(qty),
-          "Platform Name(Optional)": "",
-          "GSTIN of e-commerce operator (Optional)": ""
-        });
+        // Deduct from remaining budget tracking
+        remainingDailyBudget -= actualTaxable;
+
+        // Only add to invoice if quantity is at least 1
+        if (qty > 0) {
+          finalData.push({
+            "DATE": dateStr,
+            "INVOICE NO.": currentInvoiceStr,
+            "GSTIN": party.gstin,
+            "TRADE NAME": party.name,
+            "RATE": parseFloat(hsn.rate), 
+            "TAXABLE": parseFloat(actualTaxable.toFixed(2)), 
+            "HSN CODE(OPTIONAL)": hsn.id,
+            "QTY(OPTIONAL)": parseInt(qty),
+            "Platform Name(Optional)": "",
+            "GSTIN of e-commerce operator (Optional)": ""
+          });
+        }
       });
+      // --- RANDOMIZATION LOGIC END ---
+
       currentInvoiceStr = incrementInvoice(currentInvoiceStr);
     });
   }
@@ -63,12 +86,11 @@ export const exportToExcel = (data) => {
       const cell = worksheet[XLSX.utils.encode_cell({r:R, c})];
       if(cell) { 
         cell.t = 'n'; 
-        // Rate and Taxable get decimals, Qty (column 7) gets whole number format
         cell.z = (c === 7) ? '0' : '0.00'; 
       }
     });
   }
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "B2B");
-  XLSX.writeFile(workbook, `Invoices_Final.xlsx`);
+  XLSX.writeFile(workbook, `Invoices_Randomized.xlsx`);
 };
