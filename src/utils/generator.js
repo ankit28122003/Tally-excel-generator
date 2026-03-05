@@ -20,41 +20,43 @@ export const generateInvoiceData = (config, parties, hsnList) => {
 
     parties.forEach(party => {
       const dailyLimit = party.isWithinState ? 95000 : 45000;
-      const dailyPartyBudget = parseFloat(party.budget) / daysDiff;
+      const baseDailyBudget = parseFloat(party.budget) / daysDiff;
 
-      if (dailyPartyBudget > dailyLimit) {
-        throw new Error(`${party.name} daily total (${dailyPartyBudget.toFixed(0)}) exceeds ${dailyLimit} limit.`);
+      if (baseDailyBudget > dailyLimit) {
+        throw new Error(`${party.name} daily average (${baseDailyBudget.toFixed(0)}) exceeds state limit.`);
       }
 
-      // --- RANDOMIZATION LOGIC START ---
-      // 1. Generate random weights for each HSN
-      const weights = hsnList.map(() => Math.random() + 0.5); // +0.5 ensures no HSN gets 0 amount
+      // --- RANDOM VARIANCE LOGIC ---
+      // This fluctuates the bill total by +/- ₹200 to ₹2000 
+      // while staying safely below the state limit
+      const variance = (Math.random() * 1800 + 200) * (Math.random() > 0.5 ? 1 : -1);
+      let targetBillTotal = baseDailyBudget + variance;
+      
+      // Safety check: Don't exceed the legal GST limits
+      if (targetBillTotal > dailyLimit) targetBillTotal = dailyLimit - 500;
+      if (targetBillTotal < 1000) targetBillTotal = baseDailyBudget; // Fallback for very small budgets
+
+      // 1. Generate random weights for each HSN item
+      const weights = hsnList.map(() => Math.random() + 0.5);
       const totalWeight = weights.reduce((a, b) => a + b, 0);
       
-      let remainingDailyBudget = dailyPartyBudget;
+      let remainingBillBudget = targetBillTotal;
 
       hsnList.forEach((hsn, index) => {
         const unitPrice = parseFloat(hsn.price);
-        
         let targetAmountForThisHSN;
         
-        // If it's the last HSN item, give it the remaining budget to ensure total matches exactly
         if (index === hsnList.length - 1) {
-          targetAmountForThisHSN = remainingDailyBudget;
+          targetAmountForThisHSN = remainingBillBudget;
         } else {
-          targetAmountForThisHSN = (weights[index] / totalWeight) * dailyPartyBudget;
+          targetAmountForThisHSN = (weights[index] / totalWeight) * targetBillTotal;
         }
 
-        // 2. Calculate Quantity (Whole Number)
         const qty = Math.floor(targetAmountForThisHSN / unitPrice);
-        
-        // 3. Calculate Actual Taxable based on the whole Quantity
         const actualTaxable = qty * unitPrice;
         
-        // Deduct from remaining budget tracking
-        remainingDailyBudget -= actualTaxable;
+        remainingBillBudget -= actualTaxable;
 
-        // Only add to invoice if quantity is at least 1
         if (qty > 0) {
           finalData.push({
             "DATE": dateStr,
@@ -70,7 +72,6 @@ export const generateInvoiceData = (config, parties, hsnList) => {
           });
         }
       });
-      // --- RANDOMIZATION LOGIC END ---
 
       currentInvoiceStr = incrementInvoice(currentInvoiceStr);
     });
@@ -92,5 +93,5 @@ export const exportToExcel = (data) => {
   }
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "B2B");
-  XLSX.writeFile(workbook, `Invoices_Randomized.xlsx`);
+  XLSX.writeFile(workbook, `Invoices_Varied_${Date.now()}.xlsx`);
 };
